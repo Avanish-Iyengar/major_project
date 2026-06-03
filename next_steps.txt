@@ -1,0 +1,156 @@
+● Expanded next‑steps detail
+
+  1. HUD extraction
+    - Create hud.py in project root.
+    - Move whole _draw_hud function (lines 70‑125) plus any HUD‑related constants (e.g., colors C if not used elsewhere) into this file.
+    - Add def draw_hud(frame, definition, state, fps): wrapper that calls the moved code.
+    - In exercise_runner.py replace call _draw_hud(frame, definition, state, fps) with from hud import draw_hud then draw_hud(...).
+  2. Camera handling
+    - camera.py
+  import cv2
+  from config import CAMERA_INDEX, CAMERA_WIDTH, CAMERA_HEIGHT
+
+  def init_camera():
+      cap = cv2.VideoCapture(CAMERA_INDEX)
+      cap.set(cv2.CAP_PROP_FRAME_WIDTH,  CAMERA_WIDTH)
+      cap.set(cv2.CAP_PROP_FRAME_HEIGHT, CAMERA_HEIGHT)
+      cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+      return cap
+    - Import in exercise_runner.py as from camera import init_camera.
+  3. MediaPipe pose detection
+    - pose.py
+  import mediapipe as mp
+  from mediapipe.tasks import python as mp_python
+  from mediapipe.tasks.python import vision as mp_vision
+  from config import MODEL_PATH, DETECTION_SCALE
+
+  def setup_pose():
+      opts = mp_vision.PoseLandmarkerOptions(
+          base_options=mp_python.BaseOptions(model_asset_path=MODEL_PATH),
+          running_mode=mp_vision.RunningMode.VIDEO,
+          num_poses=1,
+          min_pose_detection_confidence=0.6,
+          min_pose_presence_confidence=0.6,
+          min_tracking_confidence=0.6,
+          output_segmentation_masks=False,
+      )
+      return mp_vision.PoseLandmarker.create_from_options(opts)
+
+  def detect_pose(landmarker, frame):
+      h, w = frame.shape[:2]
+      det_w = int(w * DETECTION_SCALE)
+      det_h = int(h * DETECTION_SCALE)
+      small = cv2.resize(frame, (det_w, det_h))
+      rgb = cv2.cvtColor(small, cv2.COLOR_BGR2RGB)
+      mp_img = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
+      return landmarker.detect_for_video(mp_img, int(time.time() * 1000))
+    - Use in loop: landmarker = setup_pose(); then result = detect_pose(landmarker, frame).
+  4. Rep / isometric tracking
+    - rep_tracker.py
+  class RepTracker:
+      def __init__(self, definition):
+          self.definition = definition
+          self.is_iso = definition.isometric_trigger is not None
+          self.rt = definition.rep_trigger
+          self.iso = definition.isometric_trigger
+          self.reset()
+
+      def reset(self):
+          self.rep_count = 0
+          self.clean_reps = 0
+          self.stage = UP
+          self.rep_had_error = False
+          self.rep_fail_reason = 
+          self.rep_was_clean = None
+          self.best_driver_angle = 180.0 if (self.rt and self.rt.direction == decrease) else 0.0
+          self.rep_errors = []
+          self.session_log = []
+          self.hold_start = None
+          self.hold_secs = 0.0
+          self.in_position = False
+          self.prev_in_pos = False
+
+      def update(self, view, driver_angle, alerts):
+          # replicate logic from lines 380‑449 (dynamic) and 327‑374 (isometric)
+          # return updated state dict (rep_count, clean_reps, stage, ... ) 
+          # (implementation can directly copy the original code blocks)
+          pass
+    - In exercise_runner.py instantiate tracker = RepTracker(definition) and call state = tracker.update(view, driver_angle, alerts) each frame.
+  5. Joint checks
+    - joint_checks.py
+  from math_utils import angle_2d, angle_3d
+  from landmarks import LM
+
+  def compute_joint_angle(jc, lms, pts):
+      if jc.use_3d:
+          try:
+              return angle_3d(lms[LM[jc.landmark_a]],
+                              lms[LM[jc.landmark_b]],
+                              lms[LM[jc.landmark_c]])
+          except Exception:
+              return None
+      if jc.landmark_a not in pts or jc.landmark_b not in pts or jc.landmark_c not in pts:
+          return None
+      return angle_2d(pts[jc.landmark_a], pts[jc.landmark_b], pts[jc.landmark_c])
+
+  def run_checks(definition, lms, pts, view):
+      alerts, joint_angles, driver_angle = [], {}, 0.0
+      for jc in definition.joint_checks:
+          if view not in jc.check_in_views:
+              continue
+          angle = compute_joint_angle(jc, lms, pts)
+          if angle is None:
+              continue
+          joint_angles[jc.display_name] = angle
+          if jc.is_rep_driver and view in jc.driver_for_views:
+              driver_angle = angle
+          if jc.alert_too_low and angle < jc.min_angle:
+              alerts.append(jc.alert_too_low)
+          elif jc.alert_too_high and angle > jc.max_angle:
+              alerts.append(jc.alert_too_high)
+      return alerts, joint_angles, driver_angle
+    - Import and use in loop.
+  6. Voice and Gemini report
+    - voice.py – move init_tts and speak from exercise_runner.py.
+    - report.py – wrap build_gemini_prompt_generic and show_report_window.
+  7. Update main script
+  from camera import init_camera
+  from pose import setup_pose, detect_pose
+  from rep_tracker import RepTracker
+  from joint_checks import run_checks
+  from hud import draw_hud
+  from voice import init_tts, speak
+  from report import build_gemini_prompt_generic, show_report_window
+  # other imports unchanged
+  8. Testing & profiling
+    - Run original script, note FPS (printed in console).
+    - After refactor, run again; measure FPS with same settings.
+    - If still high latency, adjust CAMERA_WIDTH/HEIGHT or DETECTION_SCALE in config.py.
+    - Consider processing every Nth frame (if frame_idx % 2: continue) or moving capture to a background thread.
+
+  Why this helps lag
+
+  - Isolating heavy CPU/GPU work (MediaPipe inference) keeps it in one place; other modules run quickly.
+  - Smaller frame size → fewer pixels → faster pose detection.
+  - Threaded capture prevents camera read blocking the processing loop.
+  - Clean module boundaries make it easier to profile each part and disable/replace the most expensive one.
+
+  Proceed with file creation and code moves, then run exercise_runner.py to verify functional parity and performance gains.
+
+
+================================================================================
+
+● Intention: split monolithic runner into focused modules, each own responsibility. Reduce single‑file workload, let CPU/GPU   
+ heavy parts (camera,                                                                                                                                
+   MediaPipe, rep state) stay in main loop, move UI, drawing, joint logic, voice, report to separate files. Benefits: clearer code, easier           
+ profiling,                                                                                                                                          
+   ability to run lighter parts in parallel or lazy‑load, lower memory pressure, quicker loop execution → smoother live feed. Basic steps without    
+   code:                                                                                                                                             
+                                                                                                                                                     
+   - Identify logical groups: camera setup, pose detection, rep/isometric tracking, joint checks, HUD overlay, voice alerts, Gemini report.          
+   - For each group create a new .py file, expose a single function or class (e.g., init_camera(), detect_pose(), RepTracker, run_checks(),          
+   draw_hud(), speak(), build_report()).                                                                                                             
+   - In main exercise_runner.py replace in‑line blocks with imports and calls to those functions.                                                    
+   - Keep shared constants in config.py; pass needed objects (definition, state) to modules.                                                         
+   - Run script, compare FPS; adjust frame size or detection scale if still lag.                                                                     
+   - Optional: run capture in separate thread, skip frames, or process every Nth frame for further speed.        
