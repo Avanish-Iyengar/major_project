@@ -1,0 +1,41 @@
+{
+  "files": {
+    "code": [
+      "config.py",
+      "hud.py",
+      "exercise_runner.py",
+      "landmarks.py",
+      "gemini.py",
+      "camera.py",
+      "posture_checks.py",
+      "smoother.py",
+      "exercise_base.py",
+      "admin.py",
+      "math_utils.py",
+      "pose.py",
+      "joint_checks.py",
+      "drawing.py",
+      "voice.py",
+      "main.py",
+      "exercises/seated_leg_extensions.py",
+      "exercises/squat.py",
+      "exercises/isometric_quadriceps.py"
+    ],
+    "document": [
+      "next_steps.txt",
+      "file_descriptions.md",
+      "requirements.txt",
+      "CLAUDE.md",
+      "file.txt"
+    ],
+    "paper": [],
+    "image": [],
+    "video": []
+  },
+  "total_files": 24,
+  "total_words": 12474,
+  "needs_graph": false,
+  "warning": "Corpus is ~12,474 words - fits in a single context window. You may not need a graph.",
+  "skipped_sensitive": [],
+  "graphifyignore_patterns": 3
+}

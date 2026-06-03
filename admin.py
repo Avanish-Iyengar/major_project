@@ -13,19 +13,10 @@ import re
 import json
 import requests
 from config import OLLAMA_MODEL, OLLAMA_URL
+from landmarks import LM
 
 # ── Available landmarks ───────────────────────────────────────────────────────
-AVAILABLE_LANDMARKS = [
-    "nose", "left_ear", "right_ear",
-    "left_shoulder", "right_shoulder",
-    "left_elbow", "right_elbow",
-    "left_wrist", "right_wrist",
-    "left_hip", "right_hip",
-    "left_knee", "right_knee",
-    "left_ankle", "right_ankle",
-    "left_heel", "right_heel",
-    "left_foot", "right_foot",
-]
+AVAILABLE_LANDMARKS = list(LM.keys())
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -72,7 +63,7 @@ def ask_landmark(prompt: str, default: str) -> str:
                 return AVAILABLE_LANDMARKS[idx]
         except ValueError:
             pass
-        print(f"    ⚠  Enter a landmark name or number (1–{len(AVAILABLE_LANDMARKS)})")
+        print(f"     Enter a landmark name or number (1-{len(AVAILABLE_LANDMARKS)})")
 
 def slug(name: str) -> str:
     """Convert exercise name to a valid Python identifier."""
@@ -104,7 +95,7 @@ def call_ollama(prompt: str, model: str = None) -> dict:
         return json.loads(data.get("response", "{}"))
     
     except requests.exceptions.RequestException as e:
-        print(f"   Ollama connection failed: {e}")
+        print(f"   Ai connection failed: {e}")
         return {}
     except json.JSONDecodeError:
         print("    Invalid JSON from Ollama")
@@ -125,7 +116,7 @@ Extract and return ONLY valid JSON (no markdown, no explanation) with this examp
   "type": "dynamic" or "isometric",
   "valid_views": ["FRONT"] or ["SIDE"] or ["FRONT", "SIDE"],
   "joint_checks": [
-    {{
+    {{d
       "display_name": "Knee (L)",
       "landmark_a": "left_hip",
       "landmark_b": "left_knee",
@@ -152,14 +143,14 @@ Extract and return ONLY valid JSON (no markdown, no explanation) with this examp
   "gemini_errors": ["error description 1"]
 }}
 
-For isometric exercises, set "rep_trigger": null and provide:
+For isometric exercises, set "rep_trigger": null and provide this example Structure (Never directly use values from here):
 {{
   "isometric_trigger": {{
     "joint_display_name": "Knee (L)",
-    "hold_min_angle": 55.0,
-    "hold_max_angle": 95.0,
-    "hold_duration_secs": 10.0,
-    "alert_not_in_pos": "Bend to 55-95 degrees",
+    "hold_min_angle": (take from input), 
+    "hold_max_angle": (take from input), 
+    "hold_duration_secs": (take from input),  
+    "alert_not_in_pos": "Bend to (input range) degrees",
     "alert_too_low": "Too flexed",
     "alert_too_high": "Not bent enough"
   }}
@@ -246,7 +237,7 @@ def ai_create_exercise(model=None):
     with open(out_path, "w") as f:
         f.write(code)
     
-    print(f"\n✅ Created: exercises/{filename}")
+    print(f"\n Created: exercises/{filename}")
     print(f"   Run it:  python exercises/{filename}\n")
 
 
@@ -449,7 +440,7 @@ def _run_isometric_wizard(name, description, valid_views):
     with open(out_path, "w") as f:
         f.write(generate_isometric_file(data))
 
-    print(f"\n✅ Created: exercises/{filename}")
+    print(f"\n Created: exercises/{filename}")
     print(f"   Run it:  python exercises/{filename}\n")
 
 
@@ -499,7 +490,7 @@ def delete_exercise(filename):
     path = os.path.join(ex_dir, filename)
     
     if not os.path.exists(path):
-        print(f"\n  ⚠  File not found: {filename}\n")
+        print(f"\n   File not found: {filename}\n")
         return
     
     confirm = ask(f"Delete {filename}? (yes/no)", "no").lower()
@@ -508,7 +499,7 @@ def delete_exercise(filename):
         return
     
     os.remove(path)
-    print(f"\n  ✅ Deleted: {filename}\n")
+    print(f"\n   Deleted: {filename}\n")
 
 
 # ── Create new exercise ───────────────────────────────────────────────────────
@@ -643,7 +634,7 @@ def create_exercise():
     with open(out_path, "w") as f:
         f.write(code)
 
-    print(f"\n✅ Created: exercises/{filename}")
+    print(f"\n Created: exercises/{filename}")
     print(f"   Run it:  python exercises/{filename}\n")
 
 
@@ -653,7 +644,7 @@ if __name__ == "__main__":
         print("  XAI Exercise Admin")
         print("═" * 60)
         print("  1. Create new exercise (wizard)")
-        print("  2. Create with AI (Ollama)")
+        print("  2. Create with AI ")
         print("  3. List exercises")
         print("  4. Read exercise file")
         print("  5. Delete exercise")

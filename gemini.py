@@ -5,6 +5,10 @@
 # ╚══════════════════════════════════════════════════════════════════╝
 
 from config import GEMINI_API_KEY
+import cv2
+import numpy as np
+import threading
+
 
 # Error keys — must match exactly what posture_checks.py appends to alerts[]
 ALL_ERRORS = [
@@ -115,11 +119,11 @@ def call_gemini(prompt: str) -> str:
 
     url = (
         "https://generativelanguage.googleapis.com/v1beta/models/"
-        "gemini-2.5-flash:generateContent"
+        "gemini-2.5-flash-lite:generateContent"
     )
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"temperature": 0.4, "maxOutputTokens": 2048},
+        "generationConfig": {"temperature": 0.4, "maxOutputTokens": 100000},
     }
     try:
         r = req.post(
@@ -214,12 +218,9 @@ Do NOT use asterisks. Plain text only. Keep the total report under 400 words.
 
 # ── cv2 report window ─────────────────────────────────────────────────────────
 
-import cv2
-import numpy as np
-import threading
 
 _report_state: dict = {
-    "text":  "  Analyzing your session with Gemini...",
+    "text":  "  Analyzing your session with AI...",
     "ready": False,
 }
 
@@ -255,7 +256,7 @@ def show_report_window(prompt: str):
     API call runs in background thread — window opens instantly.
     Controls: UP/DOWN or W/S to scroll. Q or ESC to close.
     """
-    WIN   = "Gemini Coaching Report"
+    WIN   = "AI Coaching Report"
     WIN_W, WIN_H = 900, 700
     BG    = (18, 18, 28)
     HDR   = (0, 165, 255)
@@ -264,11 +265,12 @@ def show_report_window(prompt: str):
     SEC   = (100, 210, 140)
     ERR   = (60, 80, 220)
     FONT  = cv2.FONT_HERSHEY_SIMPLEX
+    # PREVIOUS FONT=FONT_HERSHEY_SIMPLEX
     LINE_H    = 26
     MARGIN_X  = 32
     MAX_CHARS = (WIN_W - MARGIN_X * 2) // 8
 
-    _report_state["text"]  = "  Analyzing your session with Gemini..."
+    _report_state["text"]  = "  Analyzing your session with AI..."
     _report_state["ready"] = False
     threading.Thread(target=_fetch_thread, args=(prompt,), daemon=True).start()
 
@@ -282,7 +284,7 @@ def show_report_window(prompt: str):
         canvas = np.full((WIN_H, WIN_W, 3), BG, dtype=np.uint8)
 
         cv2.rectangle(canvas, (0, 0), (WIN_W, 52), (10, 10, 20), -1)
-        cv2.putText(canvas, "GEMINI COACHING REPORT", (MARGIN_X, 34),
+        cv2.putText(canvas, "AI COACHING REPORT", (MARGIN_X, 34),
                     FONT, 0.75, HDR, 1, cv2.LINE_AA)
         cv2.putText(canvas, "UP/DOWN = scroll    Q/ESC = close", (WIN_W - 320, 34),
                     FONT, 0.38, DIM, 1)
@@ -296,7 +298,7 @@ def show_report_window(prompt: str):
         if not _report_state["ready"]:
             dots = "." * ((dot_frame // 8 % 3) + 1)
             dot_frame += 1
-            cv2.putText(canvas, f"  Analyzing your session with Gemini{dots}",
+            cv2.putText(canvas, f"  Analyzing your session with AI{dots}",
                         (MARGIN_X, body_top + 44), FONT, 0.55, TXT, 1, cv2.LINE_AA)
             cv2.putText(canvas, "  (This usually takes 3-8 seconds)",
                         (MARGIN_X, body_top + 74), FONT, 0.42, DIM, 1)

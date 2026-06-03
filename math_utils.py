@@ -61,5 +61,5 @@ def build_pts(lms, w: int, h: int) -> dict:
         if lm.visibility < VISIBILITY_THRESH:
             continue
         sx, sy, _ = smooth_landmark(name, lm)
-        pts[name] = (int(sx * w), int(sy * h))
+        pts[name] = (sx * w, sy * h)
     return pts

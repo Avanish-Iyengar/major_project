@@ -10,6 +10,8 @@
 import os
 import sys
 import importlib.util
+from exercise_runner import run_exercise
+
 
 # Project root is the folder that contains this file.
 # Add it to sys.path so all modules (exercise_base, landmarks, etc.) resolve
@@ -59,7 +61,7 @@ def main():
     print("═" * 50)
 
     if not exercises:
-        print("  ⚠  No exercise files found in exercises/")
+        print("    No exercise files found in exercises/")
         print("  Run:  python admin.py  to add one.")
         print("═" * 50 + "\n")
         sys.exit(0)
@@ -74,7 +76,7 @@ def main():
         try:
             choice = int(raw)
         except ValueError:
-            print("  ⚠  Enter a number.")
+            print("    Enter a number.")
             continue
 
         if choice == len(exercises) + 1:
@@ -86,12 +88,11 @@ def main():
             spec   = importlib.util.spec_from_file_location("selected_exercise", fpath)
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
-            from exercise_runner import run_exercise
             run_exercise(module.get_definition())
             break
 
         else:
-            print(f"  ⚠  Enter a number between 1 and {len(exercises) + 1}.")
+            print(f"    Enter a number between 1 and {len(exercises) + 1}.")
 
 
 if __name__ == "__main__":

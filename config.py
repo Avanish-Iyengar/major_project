@@ -11,7 +11,7 @@ MODEL_PATH = "pose_landmarker.task"
 # ── 2. API keys ───────────────────────────────────────────────────────────────
 XI_KEY         = "YOUR_ELEVENLABS_API_KEY"  # elevenlabs.io → Profile → API Key
 VOICE_ID       = "YOUR_VOICE_ID"            # elevenlabs.io → Voices → copy ID
-GEMINI_API_KEY = "AIzaSyCg4fN9kFSYCHa_XPHZF3lNrqpIXCHYC8g"      # aistudio.google.com → Get API Key
+GEMINI_API_KEY = "AIzaSyA6msIOwv7TmRFsYnPQt893jrt5EzPozvU"      # aistudio.google.com → Get API Key
 OLLAMA_MODEL = "gemma3:4b" 
 OLLAMA_URL = "http://localhost:11434"
 
@@ -23,9 +23,9 @@ DETECTION_SCALE = 0.9     # MediaPipe runs at this fraction of full resolution.
                           # 0.5 = 2–3× faster. Raise toward 1.0 if joints drift.
 
 # ── 4. Smoothing ──────────────────────────────────────────────────────────────
-EMA_ALPHA         = 1.0   # Landmark smoothing. Lower = smoother, more lag.
+EMA_ALPHA         = 0.25   # Landmark smoothing. Lower = smoother, more lag.
                           # Range: 0.2 (buttery) → 0.8 (nearly raw)
-VISIBILITY_THRESH = 0.4   # Landmarks below this confidence are ignored.
+VISIBILITY_THRESH = 0.6   # Landmarks below this confidence are ignored.
                           # Lower to 0.4 if joints disappear; raise to 0.75 for fewer phantoms.
 
 # ── 5. Voice ──────────────────────────────────────────────────────────────────

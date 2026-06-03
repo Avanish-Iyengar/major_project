@@ -1,5 +1,5 @@
-# exercises/isometric_quadriceps_for_knee_mobility.py — Isometric quadriceps for knee mobility
-# Run:  python exercises/isometric_quadriceps_for_knee_mobility.py
+# exercises/isometric_quadriceps.py — Isometric quadriceps
+# Run:  python exercises/isometric_quadriceps.py
 
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -13,8 +13,8 @@ HOLD_TARGET = 10.0
 
 def get_definition() -> ExerciseDefinition:
     return ExerciseDefinition(
-        name        = 'Isometric quadriceps for knee mobility',
-        description = 'Perform an isometric contraction of the quadriceps to improve knee mobility.',
+        name        = 'Isometric quadriceps',
+        description = 'Lie down on a bed or flat surface and hold a quadriceps contraction.',
         valid_views = ['SIDE'],
 
         joint_checks = [
@@ -41,7 +41,7 @@ def get_definition() -> ExerciseDefinition:
             hold_min_angle     = HOLD_MIN,
             hold_max_angle     = HOLD_MAX,
             hold_duration_secs = HOLD_TARGET,
-            alert_not_in_pos   = 'Hold between 130 and 170 degrees',
+            alert_not_in_pos   = 'Bend to 130-170 degrees',
             alert_break        = "Position lost — return to hold position",
         ),
 
